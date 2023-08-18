@@ -4,30 +4,30 @@
 \alias{plot_cdfs}
 \title{Plot Cumulative Distribution Functions (CDFs)}
 \usage{
-plot_cdfs(data, variable, target_var, target, weight_var)
+plot_cdfs(data, variable, cohort_id, target_cohort_cohort, weight_var)
 }
 \arguments{
 \item{data}{A dataframe containing the data to be visualized.}
 
 \item{variable}{A character string indicating the column name of the continuous variable to visualize.}
 
-\item{target_var}{A character string indicating the column name that differentiates cohorts.}
-
-\item{target}{The value in the `target_var` column that defines the target cohort.}
+\item{cohort_id}{A character string indicating the column name that differentiates cohorts.}
 
 \item{weight_var}{A character string indicating the column name for the weights.}
+
+\item{target_cohort}{The value in the `cohort_id` column that defines the target_cohort cohort.}
 }
 \value{
 A `ggplot` object representing the CDFs.
 }
 \description{
 This function plots the CDFs for a given variable in a dataset, and showcases the distributions
-of the target cohort, the overall cohort, and a weighted global cohort.
+of the target_cohort cohort, the overall cohort, and a weighted global cohort.
 }
 \details{
 The function produces three lines on the CDF plot:
 \itemize{
-  \item Target cohort CDF, colored in "#FF0155".
+  \item target_cohort cohort CDF, colored in "#FF0155".
   \item Overall cohort CDF, colored in "#617989".
   \item Weighted global cohort CDF, colored in "#9447FB".
 }
@@ -37,14 +37,14 @@ The function uses weighted empirical CDF calculations (`wtd.Ecdf`) and visualize
 # Generate a mock dataset
 set.seed(123)
 data <- data.frame(variable = rnorm(100),
-                   target_var = sample(1:3, 100, replace = TRUE),
+                   cohort_id = sample(1:3, 100, replace = TRUE),
                    weight_var = runif(100))
 
 # Use the plot_cdfs function
 p <- plot_cdfs(data = data,
                variable = "variable",
-               target_var = "target_var",
-               target = 2,
+               cohort_id = "cohort_id",
+               target_cohort = 2,
                weight_var = "weight_var")
 print(p)
 
