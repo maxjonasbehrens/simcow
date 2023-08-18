@@ -13,7 +13,7 @@ if (!requireNamespace("devtools", quietly = TRUE)) {
 }
 
 # Install the package
-devtools::install_github("YourGitHubUsername/YourRepoName")
+devtools::install_github("maxjonasbehrens/simcow")
 ```
 
 ## Functions
