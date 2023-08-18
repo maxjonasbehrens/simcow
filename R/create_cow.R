@@ -97,8 +97,6 @@ create_cow <- function(data,
   cohorts <- unique(data[,cohort_id])
   cohorts <- cohorts[cohorts!=target_cohort]
 
-  names(data)[names(data)==cohort_id] <- "cohort"
-
   # Empty list to store data combinations
   data_list <- list()
 
@@ -108,8 +106,8 @@ create_cow <- function(data,
   # Compute PS and IPW for each cohort
   for (c in cohorts){
 
-    data_list[[c]] = data |>  filter(cohort %in% c(target_cohort,c))
-    data_list[[c]]$c_flag = ifelse(data_list[[c]]$cohort == c,0,1)
+    data_list[[c]] = data[data[, cohort_id] %in% c(target_cohort, c), ]
+    data_list[[c]]$c_flag = ifelse(data_list[[c]][, cohort_id] == c, 0, 1)
 
     ps.fit.temp = glm(ps_formula, data = data_list[[c]], family = binomial(link = "logit"))
     ps.temp  = predict(ps.fit.temp, type = "response")
@@ -118,30 +116,26 @@ create_cow <- function(data,
     data_list[[c]]$ps_weight = ps.temp
 
     # Data with only the target site included
-    target_dat = data_list[[c]] |>
-      filter(cohort == target_cohort) |>
-      mutate(weight = 1)
+    target_dat = data_list[[c]][data_list[[c]][, cohort_id] == target_cohort, ]
+    target_dat$weight = 1
 
     # Compute inverse c index
     inverse_c <- 1/calculate_c_index(predicted = data_list[[c]]$ps_weight,
                                      actual = data_list[[c]]$c_flag)
 
+    # Adjust weights
     if (trunc_weights){
-      data_list[[c]] <- data_list[[c]] |>
-        mutate(weight = ifelse(ps_weight*inverse_c>1,1,ps_weight*inverse_c)) |>
-        mutate(weight = ifelse(cohort == target_cohort,1,weight))
+      data_list[[c]]$weight <- ifelse(data_list[[c]]$ps_weight * inverse_c > 1, 1, data_list[[c]]$ps_weight * inverse_c)
     } else {
-      data_list[[c]] <- data_list[[c]] |>
-        mutate(weight = ps_weight*inverse_c) |>
-        mutate(weight = ifelse(cohort == target_cohort,1,weight))
+      data_list[[c]]$weight <- data_list[[c]]$ps_weight * inverse_c
     }
+    data_list[[c]] <- data_list[[c]][data_list[[c]][, cohort_id] != target_cohort,]
 
 
   }
 
   # Put everything together
   final_dat <- do.call(rbind.data.frame, data_list)
-
   final_dat <- rbind(final_dat, target_dat)
 
   return(final_dat)
