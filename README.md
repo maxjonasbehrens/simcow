@@ -1,4 +1,6 @@
-# Similarity-based Cohort Weighting (simcow)
+<img src='logo/simcow_logo.png' width='250'>
+
+# Sim<sub>ilarity-based</sub> Co<sub>hort</sub> W<sub>eighting</sub> (simcow)
 
 This R package provides functions to generate cohort weights for datasets with multiple cohorts. These weights are useful for adjusting datasets to make them more comparable across different cohorts.
 
