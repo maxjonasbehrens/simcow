@@ -4,7 +4,7 @@
 \alias{plot_cdfs}
 \title{Plot Cumulative Distribution Functions (CDFs)}
 \usage{
-plot_cdfs(data, variable, cohort_id, target_cohort_cohort, weight_var)
+plot_cdfs(data, variable, cohort_id, target_cohort, weight_var)
 }
 \arguments{
 \item{data}{A dataframe containing the data to be visualized.}
@@ -13,9 +13,9 @@ plot_cdfs(data, variable, cohort_id, target_cohort_cohort, weight_var)
 
 \item{cohort_id}{A character string indicating the column name that differentiates cohorts.}
 
-\item{weight_var}{A character string indicating the column name for the weights.}
-
 \item{target_cohort}{The value in the `cohort_id` column that defines the target_cohort cohort.}
+
+\item{weight_var}{A character string indicating the column name for the weights.}
 }
 \value{
 A `ggplot` object representing the CDFs.

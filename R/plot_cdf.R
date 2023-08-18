@@ -38,7 +38,7 @@
 #' @import ggplot2
 #' @import Hmisc
 #' @export
-plot_cdfs <- function(data, variable, cohort_id, target_cohort_cohort, weight_var) {
+plot_cdfs <- function(data, variable, cohort_id, target_cohort, weight_var) {
   # Ensure the inputs are correct variable names in the dataframe
   if (!(variable %in% names(data)) | !(cohort_id %in% names(data)) | !(weight_var %in% names(data))) {
     stop("One or more of the provided variable names do not exist in the data.")
