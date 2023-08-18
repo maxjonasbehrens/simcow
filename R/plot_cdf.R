@@ -71,16 +71,22 @@ plot_cdfs <- function(data, variable, cohort_id, target_cohort, weight_var) {
     geom_line(aes(x = t, y = cdf_global), color = "#617989") +
     geom_line(aes(x = t, y = cdf_weighted), color = "#9447FB") +
     labs(y = "(weighted) CDF") +
-    theme_minimal() +
-    theme(legend.position = "topleft") +
+    theme_bw() +
+    theme(panel.grid = element_blank(),
+          plot.title = element_text(size = 16, face = "bold"),
+          axis.text = element_text(size = 14),
+          axis.title = element_text(size = 14),
+          legend.title = element_blank(),
+          legend.position = "none",
+          legend.text = element_text(size = 14),
+          strip.background = element_blank(),
+          strip.text = element_text(size = 14)) +
     scale_color_manual(values = c("#FF0155", "#617989", "#9447FB")) +
     guides(color = guide_legend(override.aes = list(linetype = c("solid", "solid", "solid")))) +
-    labs(color = "Legend",
-         title = "",
-         subtitle = "",
-         caption = paste("target_cohort (n =", subset_size, ")",
-                         "Global (n =", overall_size, ")",
-                         "Weighted Global (n =", round(weighted_size, 2), ")"))
+    labs(color = "Legend", title = "", subtitle = "") +
+    annotate("text", x = (mean(t)-2*sd(t)), y = 0.85, label = paste("Target Only (n =", subset_size, ")"), color = "#FF0155") +
+    annotate("text", x = (mean(t)-2*sd(t)), y = 0.75, label = paste("Global (n =", overall_size, ")"), color = "#617989") +
+    annotate("text", x = (mean(t)-2*sd(t)), y = 0.65, label = paste("Weighted Global (n =", round(weighted_size, 2), ")"), color = "#9447FB")
 
   # return the ggplot object
   return(p)
