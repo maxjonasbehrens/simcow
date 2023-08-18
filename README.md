@@ -63,8 +63,8 @@ Plot Cumulative Distribution Functions (CDFs) for a given variable in a dataset.
 
 - `data`: A dataframe containing the data to be visualized.
 - `variable`: A character string indicating the column name of the continuous variable to visualize.
-- `target_var`: A character string indicating the column name that differentiates cohorts.
-- `target`: The value in the `target_var` column that defines the target cohort.
+- `cohort_id`: A character string indicating the column name that differentiates cohorts.
+- `target_cohort`: The value in the `cohort_id` column that defines the target cohort.
 - `weight_var`: A character string indicating the column name for the weights.
 
 #### Returns
@@ -90,8 +90,8 @@ data <- data.frame(variable = rnorm(100),
 # Use the plot_cdfs function
 p <- plot_cdfs(data = data,
                variable = "variable",
-               target_var = "target_var",
-               target = 2,
+               cohort_id = "target_var",
+               target_cohort = 2,
                weight_var = "weight_var")
 print(p)
 ```
