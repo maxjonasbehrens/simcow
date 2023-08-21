@@ -3,7 +3,7 @@ Type: Package
 Title: Similarity-based Cohort Weighting
 Version: 0.1.0
 Author: Max Behrens
-Maintainer: Max Behrens <max.behrens(at)uniklinik-freiburg.de>
+Maintainer: Max Behrens <max.behrens@uniklinik-freiburg.de>
 Description: This R package provides functions to generate cohort weights for datasets with multiple cohorts. These weights are useful for adjusting datasets to make them more comparable across different cohorts.
 License: BSD-3-Clause
 Encoding: UTF-8
