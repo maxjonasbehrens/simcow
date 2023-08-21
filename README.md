@@ -96,6 +96,3 @@ p <- plot_cdfs(data = data,
 print(p)
 ```
 
----
-
-You may want to modify the installation instructions to include the actual GitHub URL where you host your package. This README provides a good starting point for potential users of your R package to understand its purpose, installation process, and usage.
