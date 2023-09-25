@@ -4,7 +4,14 @@
 \alias{create_cow}
 \title{Create Cohort Weights (COW) for Multi-Cohort Data}
 \usage{
-create_cow(data, cohort_id, target_cohort, baseline_covs, trunc_weights = TRUE)
+create_cow(
+  data,
+  cohort_id,
+  target_cohort,
+  baseline_covs,
+  trunc_weights = TRUE,
+  weight_threshold = NULL
+)
 }
 \arguments{
 \item{data}{A dataframe containing the multi-cohort data.}
@@ -16,6 +23,8 @@ create_cow(data, cohort_id, target_cohort, baseline_covs, trunc_weights = TRUE)
 \item{baseline_covs}{A character vector containing the column names of baseline covariates used in computing propensity scores.}
 
 \item{trunc_weights}{A logical value. If TRUE, the computed weights are truncated to 1. Default is TRUE.}
+
+\item{weight_threshold}{A numeric value. If set, filters out rows where the weight is below this threshold. Default is NULL.}
 }
 \value{
 A dataframe similar to the input `data` but with additional columns:
@@ -33,6 +42,7 @@ The function begins by identifying the cohorts in the `data` and renaming the co
 It then computes the propensity scores for each cohort relative to the target cohort.
 Following that, the function computes the inverse C-index using the propensity scores and cohort flags.
 Finally, the cohort weights are calculated and either truncated or not based on the `trunc_weights` parameter.
+Additionally, the function can filter out rows where the weight is below a specified threshold, if `weight_threshold` is set.
 }
 \examples{
 # Generate a mock dataset
@@ -45,6 +55,7 @@ data <- data.frame(cohort_id = sample(1:3, 100, replace = TRUE),
 weighted_data <- create_cow(data = data,
                            cohort_id = "cohort_id",
                            target_cohort = 2,
-                           baseline_covs = c("covariate1", "covariate2"))
+                           baseline_covs = c("covariate1", "covariate2"),
+                           weight_threshold = 0.5)
 
 }
