@@ -7,7 +7,7 @@
 #' @param target_cohort A character or numeric value specifying which cohort is the target.
 #' @param baseline_covs A character vector containing the column names of baseline covariates used in computing propensity scores.
 #' @param trunc_weights A logical value. If TRUE, the computed weights are truncated to 1. Default is TRUE.
-#' @param weight_threshold A numeric value. If set, filters out rows where the weight is below this threshold. Default is NULL.
+#' @param weight_threshold A numeric value. If set, sets weight to 0 if below threshold. Default is NULL.
 #'
 #' @return A dataframe similar to the input `data` but with additional columns:
 #' \itemize{
@@ -20,7 +20,7 @@
 #' It then computes the propensity scores for each cohort relative to the target cohort.
 #' Following that, the function computes the inverse C-index using the propensity scores and cohort flags.
 #' Finally, the cohort weights are calculated and either truncated or not based on the `trunc_weights` parameter.
-#' Additionally, the function can filter out rows where the weight is below a specified threshold, if `weight_threshold` is set.
+#' Additionally, the function can set weights to 0 if it is below a specified threshold, if `weight_threshold` is set.
 #'
 #' @examples
 #' # Generate a mock dataset
@@ -136,7 +136,7 @@ create_cow <- function(data,
 
     # Filter by weight threshold if set
     if (!is.null(weight_threshold)) {
-      data_list[[c]] <- data_list[[c]][data_list[[c]]$weight >= weight_threshold, ]
+      data_list[[c]]$weight[data_list[[c]]$weight < weight_threshold] <- 0
     }
 
     data_list[[c]] <- data_list[[c]][data_list[[c]][, cohort_id] != target_cohort,]
