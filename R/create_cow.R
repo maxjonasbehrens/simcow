@@ -43,7 +43,7 @@ create_cow <- function(data,
                        target_cohort,
                        baseline_covs,
                        trunc_weights = TRUE,
-                       weight_threshold = NULL){
+                       overlap_threshold = NULL){
 
   # C Index functions
   # Function to calculate the number of concordant and discordant pairs
@@ -110,7 +110,7 @@ create_cow <- function(data,
   # Compute PS and IPW for each cohort
   for (c in cohorts){
 
-    data_list[[c]] = data[data[, cohort_id] %in% c(target_cohort, c), ]
+    data_list[[c]] = data[data[[cohort_id]] %in% c(target_cohort, c), ]
     data_list[[c]]$c_flag = ifelse(data_list[[c]][, cohort_id] == c, 0, 1)
 
     ps.fit.temp = glm(ps_formula, data = data_list[[c]], family = binomial(link = "logit"))
@@ -130,13 +130,15 @@ create_cow <- function(data,
     # Adjust weights
     if (trunc_weights){
       data_list[[c]]$weight <- ifelse(data_list[[c]]$ps_weight * inverse_c > 1, 1, data_list[[c]]$ps_weight * inverse_c)
+      # data_list[[c]]$weight <- ifelse(data_list[[c]]$weight < 0, 0, data_list[[c]]$weight)
     } else {
       data_list[[c]]$weight <- data_list[[c]]$ps_weight * inverse_c
     }
 
     # Filter by weight threshold if set
-    if (!is.null(weight_threshold)) {
-      data_list[[c]]$weight[data_list[[c]]$weight < weight_threshold] <- 0
+    if (!is.null(overlap_threshold)) {
+      # data_list[[c]]$weight[data_list[[c]]$weight < overlap_threshold] <- 0
+      data_list[[c]]$weight[data_list[[c]]$weight < quantile(data_list[[c]]$weight, probs = c(overlap_threshold))] <- 0
     }
 
     data_list[[c]] <- data_list[[c]][data_list[[c]][, cohort_id] != target_cohort,]
