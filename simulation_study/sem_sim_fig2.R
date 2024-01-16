@@ -152,6 +152,7 @@ evaluate_methods <- function(scenario_type, target_environment, n_target, num_si
     train_w <- create_cow(data = train_data, cohort_id = "A",
                           target_cohort = target_environment,
                           baseline_covs = c(global_predictors, env_predictors,"Y"),
+                          # baseline_covs = c("Y"),
                           trunc_weights = FALSE,
                           AUC = AUC,
                           overlap_threshold = overlap_threshold)
@@ -170,6 +171,7 @@ evaluate_methods <- function(scenario_type, target_environment, n_target, num_si
     test_data_w <- create_cow(data = test_data_w, cohort_id = "A",
                               target_cohort = target_environment,
                               baseline_covs = c(global_predictors, env_predictors,"Y"),
+                              # baseline_covs = c("Y"),
                               trunc_weights = FALSE,
                               AUC = AUC,
                               overlap_threshold = overlap_threshold)
@@ -224,13 +226,13 @@ library(dplyr)
 library(tidyr)
 library(purrr)
 
-# Parameter Grid for prediction performance
+# Parameter Grid for weight to similarity plot for higher sample sizes
 param_grid <- expand.grid(scenario = c("AX","AY","AH"),
-                          n_cat = c(2,4,6,8),
-                          n_train = round(seq(10,50,length.out = 10)),
-                          n_target = c(10,12,15,20),
+                          n_cat = c(2,4,8,10),
+                          n_train = c(10,20,30),
+                          n_target = c(10,20,30),
                           to = c(3,2,1),
-                          num_env_predictors = c(3)
+                          num_env_predictors = c(3) #1
 )
 
 # Initialize a list to hold RMSE values
@@ -249,13 +251,16 @@ for (i in 1:nrow(param_grid)) {
                                   num_simulations = 100,
                                   num_env_predictors = params$num_env_predictors,
                                   num_global_predictors = 4-params$num_env_predictors,
+                                  # num_global_predictors = 5-params$num_env_predictors,
                                   n_train = params$n_train*params$n_cat,
+                                  # n_train = params$n_target*params$n_cat,
                                   n_test = 50*params$n_cat,
                                   n_target = params$n_target,
                                   n_cat = params$n_cat,
                                   from = 0,
+                                  # to = 2*params$to,
                                   to = params$to,
-                                  AUC = TRUE, # Set to false for result for p hat
+                                  AUC = TRUE,
                                   overlap_threshold = NULL)
 
   # Store RMSE values in a data frame and then store this data frame in the list
@@ -281,27 +286,42 @@ for (i in 1:nrow(param_grid)) {
 
 param_grid$SID <- rownames(param_grid)
 
-# Unnest the results for easier plotting
-param_grid_unnested <- param_grid %>%
-  unnest(results) %>%
-  gather(key = "Method", value = "RMSE", Global, Target, Weighted)
+# Weights as a similarity measure
 
-levels(param_grid_unnested$scenario) <- c("covariate","outcome","out. + cov.")
-param_grid_unnested$scenario <- factor(param_grid_unnested$scenario, levels = c("outcome","covariate","out. + cov."))
+# Prepare the data for plotting
+plot_data <- param_grid |>
+  select(-scenario, -results) |>
+  unnest(plotting) |>
+  filter(similarity != 0)
 
-param_grid_unnested$Method <- factor(param_grid_unnested$Method, levels = c("Target","Global","Weighted"))
+levels(plot_data$scenario) <- c("covariate","outcome","out. + cov.")
 
-library(ggsci)
+# Examplary subgroup
+plot_data_short <- plot_data |>
+  filter(ID == 1)
 
-# Boxplots
-param_grid_unnested |>
-  filter(ess_ratio < 4.5) |>
-  mutate(to_fct = ifelse(to == 1,"similar",ifelse(to == 2,"medium","dissimilar"))) |>
-  mutate(ess_ratio = as.factor(round(ess_ratio))) |>
-  ggplot(aes(x = ess_ratio, y = RMSE, fill = as.factor(Method))) +
-  geom_boxplot(outlier.shape = NA) +  # Hide outliers
-  scale_fill_manual(values = c("#DDAA33","#BB5566","#004488"), labels = c("local","global","weighted")) +
-  facet_grid(scenario~to_fct, scales = "free", space = "free") +
+box_data <- plot_data_short |>
+  filter(similarity %in% c(min(similarity),1,2,3))
+
+n_names <- c("n=10","n=20","n=30")
+names(n_names) <- c("10","20","30")
+
+plot_data |>
+  group_by(ID, similarity, scenario, n_target) |>
+  summarise(weights = mean(weights),
+            lower = quantile(weights, probs = 0.25),
+            upper = quantile(weights, probs = 0.75)) |>
+  ggplot(aes(x = similarity, y = weights, color = scenario, fill = scenario, group = interaction(ID, scenario))) +
+  geom_line(alpha = 0.1)+
+  geom_boxplot(data = box_data,
+               aes(group = interaction(similarity, scenario)),
+               color = "black",
+               outlier.alpha = 0,
+               width = 0.1)+
+  facet_grid(n_target~., labeller = labeller(n_target = n_names)) +
+  labs(x = "Shift", y = "Weight") +
+  scale_color_manual(values = c("#fb8072","#984ea3","#a6cee3")) +
+  scale_fill_manual(values = c("#fb8072","#984ea3","#a6cee3")) +
   theme_bw() +
   theme(
     axis.title = element_text(size = 16),
@@ -311,23 +331,7 @@ param_grid_unnested |>
     strip.text = element_text(size = 16, face = "bold"),
     plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
     legend.position = "bottom"
-  ) +
-  labs(
-    # title = expression(paste(n["target"])),
-    title = "Subgroup Similarity",
-    x = expression(paste(ESS["weighted"] / ESS["local"])),
-    y = "RMSE",
-    fill = "Sample",
-    alpha = NULL
-  ) + coord_cartesian(ylim = c(0.7,3))
+  ) + coord_cartesian(ylim = c(0,1))
 
 # Save plot
-# ggsave("PLOTS/sim_ps/sem_sim_results_123.pdf", width = 12, height = 8, dpi= 700, device = "pdf")
-
-# Results for Table 1
-mean(unlist(param_grid_unnested[param_grid_unnested$Method=="Weighted","ess_ratio"]))
-
-mean(unlist(param_grid_unnested[param_grid_unnested$Method=="Global","RMSE"]))
-mean(unlist(param_grid_unnested[param_grid_unnested$Method=="Target","RMSE"]))
-mean(unlist(param_grid_unnested[param_grid_unnested$Method=="Weighted","RMSE"]))
-
+ggsave("PLOTS/sim_ps/sem_sim_weights.pdf", width = 12, height = 8, dpi = 700, device = "pdf")

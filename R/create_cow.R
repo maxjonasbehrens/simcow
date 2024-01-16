@@ -7,7 +7,8 @@
 #' @param target_cohort A character or numeric value specifying which cohort is the target.
 #' @param baseline_covs A character vector containing the column names of baseline covariates used in computing propensity scores.
 #' @param trunc_weights A logical value. If TRUE, the computed weights are truncated to 1. Default is TRUE.
-#' @param weight_threshold A numeric value. If set, sets weight to 0 if below threshold. Default is NULL.
+#' @param AUC A logical value. If TRUE (default), the propensity scores are multiplies by the inverse of AUC.
+#' @param overlap_threshold A numeric value. If set, sets weight to 0 if below threshold. Default is NULL.
 #'
 #' @return A dataframe similar to the input `data` but with additional columns:
 #' \itemize{
@@ -19,8 +20,10 @@
 #' @details The function begins by identifying the cohorts in the `data` and renaming the cohort column to "cohort".
 #' It then computes the propensity scores for each cohort relative to the target cohort.
 #' Following that, the function computes the inverse C-index using the propensity scores and cohort flags.
-#' Finally, the cohort weights are calculated and either truncated or not based on the `trunc_weights` parameter.
-#' Additionally, the function can set weights to 0 if it is below a specified threshold, if `weight_threshold` is set.
+#' The cohort weights are calculated and either truncated or not based on the `trunc_weights` parameter.
+#' If AUC is set to TRUE, then the propensity scores are multiplied by the inverse of the AUC of the logistic regression to account
+#' for inter-subgroup similarity.
+#' Additionally, the function can set weights to 0 if it is below a specified threshold, if `overlap_threshold` is set.
 #'
 #' @examples
 #' # Generate a mock dataset
@@ -34,7 +37,8 @@
 #'                            cohort_id = "cohort_id",
 #'                            target_cohort = 2,
 #'                            baseline_covs = c("covariate1", "covariate2"),
-#'                            weight_threshold = 0.5)
+#'                            AUC = TRUE,
+#'                            overlap_threshold = 0.05)
 #'
 #' @importFrom stats glm predict
 #' @export
@@ -43,6 +47,7 @@ create_cow <- function(data,
                        target_cohort,
                        baseline_covs,
                        trunc_weights = TRUE,
+                       AUC = TRUE,
                        overlap_threshold = NULL){
 
   # C Index functions
@@ -127,17 +132,19 @@ create_cow <- function(data,
     inverse_c <- 1/calculate_c_index(predicted = data_list[[c]]$ps_weight,
                                      actual = data_list[[c]]$c_flag)
 
+    if (!AUC){
+      inverse_c <- 1
+    }
+
     # Adjust weights
     if (trunc_weights){
       data_list[[c]]$weight <- ifelse(data_list[[c]]$ps_weight * inverse_c > 1, 1, data_list[[c]]$ps_weight * inverse_c)
-      # data_list[[c]]$weight <- ifelse(data_list[[c]]$weight < 0, 0, data_list[[c]]$weight)
     } else {
       data_list[[c]]$weight <- data_list[[c]]$ps_weight * inverse_c
     }
 
     # Filter by weight threshold if set
     if (!is.null(overlap_threshold)) {
-      # data_list[[c]]$weight[data_list[[c]]$weight < overlap_threshold] <- 0
       data_list[[c]]$weight[data_list[[c]]$weight < quantile(data_list[[c]]$weight, probs = c(overlap_threshold))] <- 0
     }
 
