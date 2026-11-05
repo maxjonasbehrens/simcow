@@ -9,40 +9,64 @@ create_cow(
   cohort_id,
   target_cohort,
   baseline_covs,
-  trunc_weights = TRUE,
-  weight_threshold = NULL
+  outcome = NULL,
+  K_folds = 5,
+  seed = NULL
 )
 }
 \arguments{
-\item{data}{A dataframe containing the multi-cohort data.}
+\item{data}{A dataframe containing the multi-cohort data. The columns in `cohort_id`,
+`baseline_covs`, and `outcome` must not contain missing values.}
 
 \item{cohort_id}{A character string indicating the column name which specifies cohort labels in the `data`.}
 
 \item{target_cohort}{A character or numeric value specifying which cohort is the target.}
 
-\item{baseline_covs}{A character vector containing the column names of baseline covariates used in computing propensity scores.}
+\item{baseline_covs}{A character vector containing the column names of the covariates used in the membership models.}
 
-\item{trunc_weights}{A logical value. If TRUE, the computed weights are truncated to 1. Default is TRUE.}
+\item{outcome}{A character string with the column name of the outcome. The outcome enters the
+membership models together with `baseline_covs`, so that the weights reflect differences in
+the outcome given the covariates. This gives the weights of Behrens et al. If NULL (default),
+the membership models use `baseline_covs` only.}
 
-\item{weight_threshold}{A numeric value. If set, filters out rows where the weight is below this threshold. Default is NULL.}
+\item{K_folds}{Number of cross-validation folds for the subgroup AUC. Default is 5.}
+
+\item{seed}{An integer or NULL. If set, the random fold assignment uses this seed and the
+global random number stream is left unchanged. If NULL (default), the folds are drawn from
+the current random number stream.}
 }
 \value{
-A dataframe similar to the input `data` but with additional columns:
+The input `data` in its original row order with three additional columns:
 \itemize{
-  \item \strong{c_flag}: A binary flag indicating the current cohort versus the target cohort.
-  \item \strong{ps_weight}: The computed propensity score for each observation.
-  \item \strong{weight}: The computed cohort weight for each observation.
+  \item \strong{c_flag}: 1 for observations of the target cohort, 0 for external observations.
+  \item \strong{ps_weight}: The fitted probability of target membership of an external observation
+    (from the membership model of its cohort); NA for target observations.
+  \item \strong{weight}: The cohort weight; 1 for target observations.
 }
+The attribute \code{"subgroups"} holds one row per external cohort with its size \code{n},
+the cross-validated \code{auc}, and the subgroup weight \code{J}.
 }
 \description{
-This function generates cohort weights for datasets with multiple cohorts. It utilizes propensity scores and the C-index to compute the weights.
+This function computes similarity-based weights for borrowing observations from
+external subgroups (cohorts) when a prediction model is fitted for a target subgroup.
+Target observations get weight 1. Each external observation gets a weight that combines
+an individual similarity (how much the observation resembles the target subgroup) and a
+subgroup similarity (how much its subgroup overlaps with the target subgroup).
 }
 \details{
-The function begins by identifying the cohorts in the `data` and renaming the cohort column to "cohort".
-It then computes the propensity scores for each cohort relative to the target cohort.
-Following that, the function computes the inverse C-index using the propensity scores and cohort flags.
-Finally, the cohort weights are calculated and either truncated or not based on the `trunc_weights` parameter.
-Additionally, the function can filter out rows where the weight is below a specified threshold, if `weight_threshold` is set.
+For each external cohort g, a logistic membership model discriminates the target
+cohort from cohort g, using the covariates in `baseline_covs` and the outcome in `outcome`.
+The model is fitted on all observations of the two cohorts; \eqn{\hat p_{jg}} is its fitted
+probability that external observation j belongs to the target cohort. The weight of j is
+\deqn{w_j = J_g \, \hat p_{jg} / \bar p_g, \qquad J_g = 1 - |2\,\mathrm{AUC}_g - 1|,}
+where \eqn{\bar p_g} is the mean of \eqn{\hat p_{jg}} within cohort g, so the individual
+weights in cohort g average to \eqn{J_g}. \eqn{\mathrm{AUC}_g} is the two-class AUC of the
+membership predictions from `K_folds`-fold cross-validation (ties count one half).
+\eqn{J_g} is 1 if the membership model cannot tell the two cohorts apart (AUC 0.5) and 0 if it
+separates them completely (AUC 0 or 1).
+
+Version 0.1.0 computed \eqn{\min(1, \hat p_{jg} / \mathrm{AUC}_g)} instead, with the AUC from the
+fitted (not cross-validated) predictions; see NEWS.md.
 }
 \examples{
 # Generate a mock dataset
@@ -50,12 +74,19 @@ set.seed(123)
 data <- data.frame(cohort_id = sample(1:3, 100, replace = TRUE),
                    covariate1 = runif(100),
                    covariate2 = rnorm(100))
+data$outcome <- data$covariate1 + data$covariate2 + rnorm(100)
 
 # Use the create_cow function
 weighted_data <- create_cow(data = data,
                            cohort_id = "cohort_id",
                            target_cohort = 2,
                            baseline_covs = c("covariate1", "covariate2"),
-                           weight_threshold = 0.5)
+                           outcome = "outcome",
+                           seed = 1)
+attr(weighted_data, "subgroups")
 
+}
+\references{
+Behrens M, et al. Improving prediction models by incorporating external data
+  with weights based on similarity. Under revision at PLOS ONE.
 }

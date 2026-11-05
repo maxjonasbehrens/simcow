@@ -2,3 +2,43 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# Outputs of the paper scripts; never commit
+paper/output/
+*.Rcheck/
+simcow_*.tar.gz
+Rplots.pdf
+
+# Data and patient-level output; never commit. Only the five simulation results are tracked.
+*.csv
+!paper/results/sim_runs.csv
+!paper/results/sim_subgroups.csv
+!paper/results/table2_runs.csv
+!paper/results/table2_summary.csv
+!paper/results/bias_variance.csv
+*.csv2
+*.tsv
+*.txt
+*.xlsx
+*.xls
+*.sav
+*.dta
+*.sas7bdat
+*.parquet
+*.feather
+*.rds
+*.rda
+*.Rdata
+*.RData
+*.log
+*.pdf
+*.tif
+*.tiff
+*.png
+senior*
+*senior*.*
+!paper/run_senior.R
+hnssc*
+
+# Local agent and editor files
+.claude/
