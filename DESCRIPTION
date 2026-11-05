@@ -1,12 +1,14 @@
 Package: simcow
 Type: Package
 Title: Similarity-based Cohort Weighting
-Version: 0.1.0
+Version: 0.2.0
 Author: Max Behrens
 Maintainer: Max Behrens <max.behrens@uniklinik-freiburg.de>
-Description: This R package provides functions to generate cohort weights for datasets with multiple cohorts. These weights are useful for adjusting datasets to make them more comparable across different cohorts.
+Description: This R package provides functions to generate cohort weights for datasets with multiple cohorts. The weights let a prediction model for a target cohort borrow observations from external cohorts in proportion to their similarity to the target cohort.
 License: BSD-3-Clause
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3.9000
-Imports: ggplot2, Hmisc
+Imports: ggplot2, Hmisc, stats
+Suggests: testthat (>= 3.0.0)
+Config/testthat/edition: 3

@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "simcow: Similarity-based Cohort Weighting"
+version: 0.2.0
+license: BSD-3-Clause
+repository-code: "https://github.com/maxjonasbehrens/simcow"
+abstract: >-
+  R package that computes similarity-based weights for borrowing observations
+  from external cohorts when a prediction model is fitted for a target cohort,
+  with the scripts and aggregated simulation results that reproduce the paper
+  "Improving prediction models by incorporating external data with weights
+  based on similarity" (Behrens et al., under revision at PLOS ONE).
+keywords:
+  - R
+  - prediction models
+  - data integration
+  - weighting
+  - subgroups
+authors:
+  - family-names: Behrens
+    given-names: Max
+    orcid: "https://orcid.org/0000-0002-4185-4702"
+    email: max.behrens@uniklinik-freiburg.de
+    affiliation: "Institute of Medical Biometry and Statistics, Faculty of Medicine and Medical Center, University of Freiburg"
